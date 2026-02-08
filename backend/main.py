@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from sqlalchemy.orm import Session
 from .schema import Notecreate
 from .database import engine
@@ -32,9 +32,15 @@ async def get_items(id:int, db:Session = Depends(get_db)):
     note = db.query(models.Note).filter(models.Note.id == id).first()
     return note
 
-@app.put("/items/{item_id}")
-async def update_item(item_id: int):
-    return {"updated succesfully"}  
+@app.put("/notes/{id}",response_model=schema.NoteResponse)
+async def update_item(id: int, updated_note : schema.Notecreate, db: Session= Depends(get_db)):
+    updnote_query= db.query(models.Note).filter(models.Note.id == id)
+    updnote = updnote_query.first()
+    if updnote is None:
+        raise HTTPException(status_code=404, detail="Item not found")
+    updnote_query.update(updated_note.model_dump(),synchronize_session=False)
+    db.commit()
+    return updnote_query.first()
 
 @app.delete("/items/{item_id}")
 async def delete_item(item_id: int):
