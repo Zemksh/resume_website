@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from .schema import Notecreate
 from .database import engine
 from .database import get_db
-from . import models
+from . import models,schema
 from fastapi.params import Depends
 app = FastAPI()
 
@@ -22,10 +22,15 @@ async def create_item(new_note : Notecreate, db =  Depends(get_db)):
     db.refresh(newnote)
     return newnote
 
-@app.get("/notes")
+@app.get("/notes",response_model=schema.NoteResponse)
 async def get_items(db:Session = Depends(get_db)):
     notes = db.query(models.Note).all()
     return notes
+
+@app.get("/notes/{id}",response_model=schema.NoteResponse)
+async def get_items(id:int, db:Session = Depends(get_db)):
+    note = db.query(models.Note).filter(models.Note.id == id).first()
+    return note
 
 @app.put("/items/{item_id}")
 async def update_item(item_id: int):
