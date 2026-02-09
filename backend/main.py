@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 from .schema import Notecreate
 from .database import engine
 from .database import get_db
 from . import models,schema
 from fastapi.params import Depends
+from typing import List
 app = FastAPI()
 
 
@@ -22,7 +23,7 @@ async def create_item(new_note : Notecreate, db =  Depends(get_db)):
     db.refresh(newnote)
     return newnote
 
-@app.get("/notes",response_model=schema.NoteResponse)
+@app.get("/notes",response_model=List[schema.NoteResponse])
 async def get_items(db:Session = Depends(get_db)):
     notes = db.query(models.Note).all()
     return notes
@@ -30,6 +31,8 @@ async def get_items(db:Session = Depends(get_db)):
 @app.get("/notes/{id}",response_model=schema.NoteResponse)
 async def get_items(id:int, db:Session = Depends(get_db)):
     note = db.query(models.Note).filter(models.Note.id == id).first()
+    if note is None:
+        raise HTTPException(status_code=404, detail="Note not found")
     return note
 
 @app.put("/notes/{id}",response_model=schema.NoteResponse)
@@ -42,6 +45,11 @@ async def update_item(id: int, updated_note : schema.Notecreate, db: Session= De
     db.commit()
     return updnote_query.first()
 
-@app.delete("/items/{item_id}")
-async def delete_item(item_id: int):
+@app.delete("/items/{item_id}",status_code=status.HTTP_204_NO_CONTENT)
+async def delete_item(item_id: int, db : Session = Depends(get_db)):
+    post = db.query(models.Note).filter(models.Note.id == item_id)
+    if post.first() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+    post.delete(synchronize_session=False)
+    db.commit()
     return {"deleted succesfully"}
