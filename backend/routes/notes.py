@@ -16,7 +16,7 @@ async def get_items(db:Session = Depends(get_db)):
     return notes
 
 @router.post("/new")
-async def create_item(new_note : schema.Notecreate, db =  Depends(get_db)):
+async def create_item(new_note : schema.Notecreate, db : Session = Depends(get_db)):
     newnote = models.Note(**new_note.model_dump())
     db.add(newnote)
     db.commit()
