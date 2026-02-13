@@ -21,4 +21,4 @@ app.include_router(notes.router)
 app.include_router(user.router)
 @app.get("/")
 async def read_root():
-    return {"Hello": "World"}
+    return {"This is": "a test website"}
