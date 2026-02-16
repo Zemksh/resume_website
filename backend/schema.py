@@ -26,3 +26,14 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
         orm_mode = True
+    
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class Token(BaseModel):
+    acess_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: int |None = None
